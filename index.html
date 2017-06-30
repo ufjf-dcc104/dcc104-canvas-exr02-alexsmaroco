@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DCC104 - Space Shooter</title>
+    <script src="ImageLoader.js" charset="utf-8"></script>
+    <script src="Sprite.js" charset="utf-8"></script>
+    <script src="Level.js" charset="utf-8"></script>
+    <script src="AudioLoader.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1>DCC104 - Space Shooter</h1>
+	<h3 id="texto"> Selecione a dificuldade </h3>
+	<form id="form">
+		<select id="dif">
+			<option id="1">Normal</option>
+			<option id="2">Dificil</option>
+		</select>
+		<input type="button" onclick="init()" value="Começar"></input>
+	</form>
+    <canvas></canvas>
+    <script>
+	var eCanvas;
+	var ctx;
+	var dif;
+	var il;
+	var al;
+	var fps;
+	var atual;
+	var anterior;
+	var dt;
+	var nave;
+	var hp;
+	var level;
+	
+	function init() {
+      eCanvas = document.getElementsByTagName("canvas")[0];
+      eCanvas.width = 600;
+      eCanvas.height = 380;
+      ctx = eCanvas.getContext("2d");
+	  
+	  var option = document.getElementById("dif");
+	  dif = parseInt(option.options[option.selectedIndex].id);
+	  console.log(dif);
+	  document.getElementById("form").style.display = "none";
+	  document.getElementById("texto").style.display = "none";
+	  
+      il = new ImageLoader();
+      il.load("pc", "images/player_ship.png");
+      il.load("enemy", "images/enemy_1.png");
+      il.load("shot", "images/shot.png");
+	  il.load("background", "images/background.jpg");
+
+      al = new AudioLoader()
+
+      al.load("shot", "audio/Missile_Launch.wav")
+      al.load("explosao", "audio/Missile_Impact.wav")
+
+      fps = 120;
+      atual = new Date();
+      anterior = new Date();
+      dt = 1/fps;
+
+      nave = new Sprite();
+      nave.x = 40;
+      nave.y = 350;
+	  nave.angle = 270
+      nave.hp = 100;
+      level = new Level();
+	  level.dif = dif;
+
+      level.imageLib = il;
+      level.init();
+
+      desenha();
+	}
+
+
+
+      function desenha(){
+	  
+        requestAnimationFrame(desenha);
+        atual = new Date();
+        dt = (atual - anterior)/1000;
+        ctx.clearRect(0,0,eCanvas.width, eCanvas.height)
+        ctx.strokeRect(0,0,eCanvas.width, eCanvas.height)
+		ctx.drawImage(il.images["background"],0,0);
+        ctx.fillStyle = "darkgreen";
+        ctx.fillText("dt: "+dt+" fps:"+Math.floor(1/dt), 10, 10);
+		if(nave.hp > 0) {
+			level.spawnInimigos(dt)
+
+			nave.mover(dt,eCanvas.width, eCanvas.height)
+			level.mover(nave,dt,eCanvas.width, eCanvas.height)
+			level.fireInimigo(dt);
+
+			level.colidiuCom(nave,
+			  function(inimigo, alvo){
+				inimigo.color = "red";
+			  }
+			);
+		}
+		else {
+			ctx.fillStyle = "red";
+			ctx.font = "50px Arial";
+			ctx.fillText("Você perdeu...", 20, eCanvas.height/2);
+		}
+        nave.desenharImg(ctx, il.images["pc"]);
+        level.desenharImg(ctx);
+        level.colidiuComTiros(al, "explosao");
+		level.colidiuComTirosInimigos(nave);
+		level.desenharInfo(ctx, nave)
+        anterior = atual;
+      }
+
+      addEventListener("keydown", function(e){
+        if(hp<=0) return;
+        switch (e.keyCode) {
+          case 32:
+            level.fire(nave,al, "shot", 0.2);
+            break;
+
+          case 37: // seta <
+			nave.vx = -100
+            break;
+          case 38:
+            //nave.am = 50;
+            break;
+          case 39: // seta >
+			nave.vx = 100
+            break;
+          case 40:
+            //nave.am = -50;
+            break;
+          default:
+
+        }
+      });
+      addEventListener("keyup", function(e){
+        switch (e.keyCode) {
+          case 37:
+			nave.vx = 0
+            break;
+          case 38:
+            nave.am = 0;
+            break;
+          case 39:
+			nave.vx = 0
+            break;
+          case 40:
+            nave.am = 0;
+            break;
+          default:
+
+        }
+      });
+
+    </script>
+  </body>
+
+
+
+
+</html>
