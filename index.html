@@ -41,7 +41,6 @@
 	  
 	  var option = document.getElementById("dif");
 	  dif = parseInt(option.options[option.selectedIndex].id);
-	  console.log(dif);
 	  document.getElementById("form").style.display = "none";
 	  document.getElementById("texto").style.display = "none";
 	  
@@ -50,8 +49,9 @@
       il.load("enemy", "images/enemy_1.png");
       il.load("shot", "images/shot.png");
 	  il.load("background", "images/background.jpg");
+	  il.load("boss", "images/boss1.png");
 
-      al = new AudioLoader()
+      al = new AudioLoader();
 
       al.load("shot", "audio/Missile_Launch.wav")
       al.load("explosao", "audio/Missile_Impact.wav")
@@ -88,23 +88,19 @@
         ctx.fillStyle = "darkgreen";
         ctx.fillText("dt: "+dt+" fps:"+Math.floor(1/dt), 10, 10);
 		if(nave.hp > 0) {
-			level.spawnInimigos(dt)
+			level.spawnInimigos(dt);
 
-			nave.mover(dt,eCanvas.width, eCanvas.height)
-			level.mover(nave,dt,eCanvas.width, eCanvas.height)
+			nave.mover(dt,eCanvas.width, eCanvas.height);
+			level.mover(nave,dt,eCanvas.width, eCanvas.height);
+			level.spawnBoss(dt,eCanvas.width, eCanvas.height);
 			level.fireInimigo(dt);
-
-			level.colidiuCom(nave,
-			  function(inimigo, alvo){
-				inimigo.color = "red";
-			  }
-			);
 		}
 		else {
 			ctx.fillStyle = "red";
 			ctx.font = "50px Arial";
 			ctx.fillText("Você perdeu...", 20, eCanvas.height/2);
 		}
+		
         nave.desenharImg(ctx, il.images["pc"]);
         level.desenharImg(ctx);
         level.colidiuComTiros(al, "explosao");
