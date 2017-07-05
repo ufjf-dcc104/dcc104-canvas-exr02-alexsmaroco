@@ -70,6 +70,7 @@
 	  level.dif = dif;
 
       level.imageLib = il;
+	  level.al = al;
       level.init();
 
       desenha();
@@ -89,7 +90,6 @@
         ctx.fillText("dt: "+dt+" fps:"+Math.floor(1/dt), 10, 10);
 		if(nave.hp > 0) {
 			level.spawnInimigos(dt);
-
 			nave.mover(dt,eCanvas.width, eCanvas.height);
 			level.mover(nave,dt,eCanvas.width, eCanvas.height);
 			level.spawnBoss(dt,eCanvas.width, eCanvas.height);

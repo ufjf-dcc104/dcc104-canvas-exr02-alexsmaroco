@@ -43,6 +43,7 @@ Level.prototype.mover = function (nave,dt,w,h) {
 			this.boss.x = this.boss.width/2;
 		}
 	}
+	
     for (var i = this.sprites.length-1; i >=0 ; i--) {
       this.sprites[i].mover(dt);
 	  this.sprites[i].cooldown-=dt;
@@ -63,6 +64,7 @@ Level.prototype.mover = function (nave,dt,w,h) {
 		this.sprites[i].y = this.sprites[i].height/2;
 	  }
     }
+	
     for (var i = this.shots.length-1;i>=0; i--) {
       this.shots[i].mover(dt);
       if(
@@ -76,7 +78,7 @@ Level.prototype.mover = function (nave,dt,w,h) {
     }
 
 	for (var i = this.enemyshots.length-1;i>=0; i--) {
-      this.enemyshots[i].mover(dt);
+      this.enemyshots[i].moverAng(dt);
       if(
         this.enemyshots[i].x >  3000 ||
         this.enemyshots[i].x < -3000 ||
@@ -175,6 +177,26 @@ Level.prototype.fireInimigo = function(dt) {
 	if(this.sprites[inimigo].cooldown > 0) {
 		return
 	}
+	if(this.boss != null) {
+		var tiro1 = new Sprite();
+		tiro1.x = this.boss.x-this.boss.vx/4;
+		tiro1.y = this.boss.y+60;
+		tiro1.angle = this.boss.angle-Math.random()*20;
+		tiro1.am = 80;
+		tiro1.width = 8;
+		tiro1.height = 16;
+		tiro1.imgkey = "shot";
+		this.enemyshots.push(tiro1);
+		var tiro2 = new Sprite();
+		tiro2.x = this.boss.x+this.boss.vx/4;
+		tiro2.y = this.boss.y+60;
+		tiro2.angle = this.boss.angle+Math.random()*20;
+		tiro2.am = 80;
+		tiro2.width = 8;
+		tiro2.height = 16;
+		tiro2.imgkey = "shot";
+		this.enemyshots.push(tiro2);
+	}
 	var tiro = new Sprite();
 	tiro.x = this.sprites[inimigo].x;
 	tiro.y = this.sprites[inimigo].y;
@@ -184,8 +206,12 @@ Level.prototype.fireInimigo = function(dt) {
 	tiro.height = 16;
 	tiro.imgkey = "shot";
 	this.enemyshots.push(tiro);
-	this.sprites[inimigo].cooldown = 3/this.dif;
-	this.fireInimigoCD = 1;
+	if(this.boss != null) {
+		this.sprites[inimigo].cooldown = 2/this.dif;
+	} else {
+		this.sprites[inimigo].cooldown = 3/this.dif;
+	}
+	this.fireInimigoCD = 2/this.dif;
 }
 
 Level.prototype.fire = function (alvo, al, key, vol){
@@ -217,44 +243,50 @@ Level.prototype.colidiuComTiros = function(al, key){
             alvo.color = "green";
             that.shots.splice(i,1);
             x = that.sprites.indexOf(alvo);
-            that.sprites.splice(x, 1);
-            that.placar += 1
+			that.sprites.splice(x, 1);
+			that.placar += 1
           }
         }
       )(this));
 	  
-	if(this.boss.colidiuCom(this.shots[i])) {
+	if(this.boss != null && this.boss.colidiuCom(this.shots[i])) {
 		this.boss.hp-=10;
 		this.shots.splice(i,1);
+		if(this.boss.hp <=0) {
+			this.al.play("explosao",0.5);
+			this.boss = null;
+			this.placar+=10;
+		}
 	}
   }
 }
 
 
 Level.prototype.spawnInimigos = function(dt) {
-  if(this.cooldownSpawn > 0 || this.sprites.length > 4) {
+	var max = 4*this.dif;
+	if(this.boss != null) {
+		max+=2*this.dif;;
+	}
+  if(this.cooldownSpawn > 0 || this.sprites.length > max) {
     this.cooldownSpawn -= dt
     return
   }
-  //for (var i = 0; i < 3; i++) {
     var inimigo = new Sprite();
     inimigo.x = 32+300*Math.random();
     inimigo.y = -40;
     inimigo.width = 32;
     inimigo.height = 32;
-    inimigo.angle = 90
+    inimigo.angle = 90;
     inimigo.vx = (75-25*Math.random())+10*this.dif;
     inimigo.vy = 25-15*Math.random();
     inimigo.imgkey = "enemy";
     inimigo.cooldown = 3/this.dif;
-	inimigo.virar = false;
+	inimigo.virar = false; // so para manter inimigo na tela
     this.sprites.push(inimigo);
-	if(this.sprites.length < 4) { // nao reseta o spawn se estiver com poucos inimigos, so evita que nasçam 2 juntos
-		this.cooldownSpawn += 2
+	if(this.sprites.length < max) { // nao reseta o spawn se estiver com poucos inimigos, so evita que nasçam 2 juntos
+		this.cooldownSpawn += 2/this.dif;
 	}
-    else this.cooldownSpawn = 4/this.dif;
-  //}
-  //this.inimigos++
+    else this.cooldownSpawn = 5/this.dif;
 }
 
 Level.prototype.desenharInfo = function(ctx, nave) {

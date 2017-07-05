@@ -84,24 +84,4 @@ Sprite.prototype.colidiuCom = function (alvo) {
   return true;
 };
 
-Sprite.prototype.perseguir = function (alvo, dt) {
-  this.ax = 10*dt*(alvo.x - this.x) - 0.05*this.vx;
-  this.ay = 10*dt*(alvo.y - this.y) - 0.05*this.vy;
-};
 
-Sprite.prototype.perseguirAng = function (alvo, dt) {
-  var dX = alvo.x - this.x;
-  var dY = alvo.y - this.y;
-  var dist = Math.sqrt(dX*dX+dY*dY);
-  var dA = 180*Math.acos(dX/dist)/Math.PI;
-  this.vang = 100*(dA - this.angle)*dt;
-};
-
-
-
-
-
-
-
-
-//
