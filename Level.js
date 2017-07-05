@@ -6,6 +6,8 @@ function Level (){
   this.cooldownSpawn = 4
   this.placar = 0
   this.fireInimigoCD = 1;
+  this.bossCountdown = 10;
+  this.boss = null;
 }
 
 Level.prototype.init = function () {
@@ -25,7 +27,22 @@ Level.prototype.init = function () {
 };
 
 Level.prototype.mover = function (nave,dt,w,h) {
-
+	if(this.boss != null) {
+		if(this.boss.y <= (h/5)) {
+			this.boss.vy = 10;
+		} else {
+			this.boss.vy = 0;
+		}
+		this.boss.mover(dt);
+		
+		if(this.boss.x+this.boss.width/2 > w) {
+			this.boss.vx = -this.boss.vx;
+			this.boss.x = w-this.boss.width/2;
+		} else if(this.boss.x < this.boss.width/2) {
+			this.boss.vx = -this.boss.vx;
+			this.boss.x = this.boss.width/2;
+		}
+	}
     for (var i = this.sprites.length-1; i >=0 ; i--) {
       this.sprites[i].mover(dt);
 	  this.sprites[i].cooldown-=dt;
@@ -33,14 +50,18 @@ Level.prototype.mover = function (nave,dt,w,h) {
   			this.sprites[i].vx = -this.sprites[i].vx;
   			this.sprites[i].x = w-this.sprites[i].width/2;
   			//descer
-  		} else if(this.sprites[i].x-this.sprites[i].width/2 < 0) {
+  		} else if(this.sprites[i].x < this.sprites[i].width/2) {
         this.sprites[i].vx = -this.sprites[i].vx;
         this.sprites[i].x = this.sprites[i].width/2;
       }
-      if(this.sprites[i].y > h) {
-  		nave.hp-=15
-        this.sprites.splice(i, 1);
-  		}
+      if(this.sprites[i].y > h-100-this.sprites[i].height/2) {
+		this.sprites[i].vy= -this.sprites[i].vy;
+		this.sprites[i].y = h - 100 - this.sprites[i].height/2;
+		this.sprites[i].virar = true;
+	  } else if(this.sprites[i].y < this.sprites[i].height/2 && this.sprites[i].virar) {
+		this.sprites[i].vy= -this.sprites[i].vy;
+		this.sprites[i].y = this.sprites[i].height/2;
+	  }
     }
     for (var i = this.shots.length-1;i>=0; i--) {
       this.shots[i].mover(dt);
@@ -103,6 +124,9 @@ Level.prototype.desenharImg = function (ctx) {
 	for (var i = 0; i < this.enemyshots.length; i++) {
       this.enemyshots[i].desenharImg(ctx, this.imageLib.images[this.enemyshots[i].imgkey]);
     }
+	if(this.boss != null) {
+		this.boss.desenharImg(ctx, this.imageLib.images[this.boss.imgkey]);
+	}
 };
 
 Level.prototype.colidiuCom = function (alvo, resolveColisao) {
@@ -122,7 +146,26 @@ Level.prototype.colidiuComTirosInimigos = function (alvo) {
   }
 };
 
-
+Level.prototype.spawnBoss = function(dt,w,h) {
+	this.bossCountdown-=this.dif*dt;
+	if(this.bossCountdown < 0) {
+		if(this.boss != null) {
+			return ; // nao matou o boss antes do prox spawn, gameover
+		}
+		this.boss = new Sprite();
+		this.boss.width = 128;
+		this.boss.height = 128;
+		this.boss.x = w/2;
+		this.boss.y = -this.boss.height/2;
+		this.boss.angle = 90
+		this.boss.vx = (75-25*Math.random())+10*this.dif;
+		this.boss.vy = 5;
+		this.boss.imgkey = "boss";
+		this.boss.cooldown = 2/this.dif;
+		this.boss.hp = 200*dif/2;
+		this.bossCountdown= 60;
+	}
+};
 
 
 Level.prototype.fireInimigo = function(dt) {
@@ -179,6 +222,11 @@ Level.prototype.colidiuComTiros = function(al, key){
           }
         }
       )(this));
+	  
+	if(this.boss.colidiuCom(this.shots[i])) {
+		this.boss.hp-=10;
+		this.shots.splice(i,1);
+	}
   }
 }
 
@@ -199,6 +247,7 @@ Level.prototype.spawnInimigos = function(dt) {
     inimigo.vy = 25-15*Math.random();
     inimigo.imgkey = "enemy";
     inimigo.cooldown = 3/this.dif;
+	inimigo.virar = false;
     this.sprites.push(inimigo);
 	if(this.sprites.length < 4) { // nao reseta o spawn se estiver com poucos inimigos, so evita que nasçam 2 juntos
 		this.cooldownSpawn += 2
