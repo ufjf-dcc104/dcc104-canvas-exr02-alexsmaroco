@@ -6,7 +6,7 @@ function Level (){
   this.cooldownSpawn = 4
   this.placar = 0
   this.fireInimigoCD = 1;
-  this.bossCountdown = 10;
+  this.bossCountdown = 30;
   this.boss = null;
 }
 
@@ -152,7 +152,7 @@ Level.prototype.spawnBoss = function(dt,w,h) {
 	this.bossCountdown-=this.dif*dt;
 	if(this.bossCountdown < 0) {
 		if(this.boss != null) {
-			return ; // nao matou o boss antes do prox spawn, gameover
+			return false; // nao matou o boss antes do prox spawn, gameover
 		}
 		this.boss = new Sprite();
 		this.boss.width = 128;
@@ -165,8 +165,9 @@ Level.prototype.spawnBoss = function(dt,w,h) {
 		this.boss.imgkey = "boss";
 		this.boss.cooldown = 2/this.dif;
 		this.boss.hp = 200*dif/2;
-		this.bossCountdown= 60;
+		this.bossCountdown= 60-15*this.dif;
 	}
+	return true;
 };
 
 
@@ -201,7 +202,7 @@ Level.prototype.fireInimigo = function(dt) {
 	tiro.x = this.sprites[inimigo].x;
 	tiro.y = this.sprites[inimigo].y;
 	tiro.angle = this.sprites[inimigo].angle;
-	tiro.ay = 50;
+	tiro.am = 50;
 	tiro.width = 8;
 	tiro.height = 16;
 	tiro.imgkey = "shot";
@@ -220,12 +221,12 @@ Level.prototype.fire = function (alvo, al, key, vol){
   tiro.x = alvo.x;
   tiro.y = alvo.y;
   tiro.angle = alvo.angle;
-  tiro.ay = -50
+  tiro.ay = -50;
   tiro.width = 8;
   tiro.height = 16;
   tiro.imgkey = "shot";
   this.shots.push(tiro);
-  alvo.cooldown = 1;
+  alvo.cooldown = 0.75;
   if(al && key) {
     al.play(key, vol)
   }
@@ -239,7 +240,7 @@ Level.prototype.colidiuComTiros = function(al, key){
         function(that)
         {
           return function(alvo){
-            al.play(key, 0.4)
+            al.play(key, 0.2)
             alvo.color = "green";
             that.shots.splice(i,1);
             x = that.sprites.indexOf(alvo);
@@ -263,7 +264,7 @@ Level.prototype.colidiuComTiros = function(al, key){
 
 
 Level.prototype.spawnInimigos = function(dt) {
-	var max = 4*this.dif;
+	var max = 6*this.dif;
 	if(this.boss != null) {
 		max+=2*this.dif;;
 	}
@@ -290,13 +291,23 @@ Level.prototype.spawnInimigos = function(dt) {
 }
 
 Level.prototype.desenharInfo = function(ctx, nave) {
-	ctx.fillStyle = "green"
-	ctx.fillText("HP: ", 180,10)
+	ctx.save();
+	ctx.fillStyle = "white"
+	ctx.fillText("Nave HP: ", 15,10)
 	if(nave.hp < 40) {
 		ctx.fillStyle = "red"
 	}
-    ctx.fillRect(220,1,nave.hp+2,10)
+    ctx.fillRect(60,1,nave.hp+2,10)
+	if(this.boss != null) {
+		ctx.fillStyle = "red";
+		ctx.fillText("Boss HP: ", 260, 10);
+		ctx.fillRect(310,1,this.boss.hp/this.dif+2,10);
+		ctx.fillStyle = "yellow";
+		ctx.fillText("Tempo: ", 430,10);
+		ctx.fillRect(470,1,this.bossCountdown*2+2,10);
+	}
 	ctx.fillStyle = "white"
-	ctx.fillText("Placar: " + this.placar, 340,10)
+	ctx.fillText("Placar: " + this.placar, 180,10)
+	ctx.restore();
 }
 
