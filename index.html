@@ -10,7 +10,7 @@
   </head>
   <body>
     <h1>DCC104 - Space Shooter</h1>
-	<h3 id="texto"> Selecione a dificuldade </h3>
+	<h3 id="texto"> Selecione a dificuldade. Obs: Você perde se o boss ficar muito tempo vivo </h3>
 	<form id="form">
 		<select id="dif">
 			<option id="1">Normal</option>
@@ -83,19 +83,16 @@
         requestAnimationFrame(desenha);
         atual = new Date();
         dt = (atual - anterior)/1000;
-        ctx.clearRect(0,0,eCanvas.width, eCanvas.height)
-        ctx.strokeRect(0,0,eCanvas.width, eCanvas.height)
+        ctx.clearRect(0,0,eCanvas.width, eCanvas.height);
+        ctx.strokeRect(0,0,eCanvas.width, eCanvas.height);
+		ctx.save();
 		ctx.drawImage(il.images["background"],0,0);
-        ctx.fillStyle = "darkgreen";
-        ctx.fillText("dt: "+dt+" fps:"+Math.floor(1/dt), 10, 10);
-		if(nave.hp > 0) {
+		if(nave.hp > 0 && level.spawnBoss(dt,eCanvas.width, eCanvas.height)) {
 			level.spawnInimigos(dt);
 			nave.mover(dt,eCanvas.width, eCanvas.height);
 			level.mover(nave,dt,eCanvas.width, eCanvas.height);
-			level.spawnBoss(dt,eCanvas.width, eCanvas.height);
 			level.fireInimigo(dt);
-		}
-		else {
+		} else {
 			ctx.fillStyle = "red";
 			ctx.font = "50px Arial";
 			ctx.fillText("Você perdeu...", 20, eCanvas.height/2);
@@ -105,7 +102,8 @@
         level.desenharImg(ctx);
         level.colidiuComTiros(al, "explosao");
 		level.colidiuComTirosInimigos(nave);
-		level.desenharInfo(ctx, nave)
+		ctx.restore();
+		level.desenharInfo(ctx, nave);
         anterior = atual;
       }
 
