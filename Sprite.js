@@ -47,9 +47,17 @@ Sprite.prototype.desenharImg = function (ctx, img) {
   ctx.restore();
 };
 
-Sprite.prototype.mover = function (dt) {
+Sprite.prototype.mover = function (dt,w,h) {
   this.vx = this.vx + this.ax*dt;
   this.vy = this.vy + (this.ay+this.g)*dt;
+  if(this.x+this.width/2 > w) {
+	this.vx = 0;
+	this.x = w-this.width/2;
+  }
+  if(this.x-this.width/2 < 0) {
+	this.vx = 0;
+	this.x = this.width/2;
+  }
   this.x = this.x + this.vx*dt;
   this.y = this.y + this.vy*dt;
   this.angle = this.angle + this.vang*dt;
